@@ -1,4 +1,4 @@
--vim.cmd.colorschemvim.cmd.colorscheme- 1. Лидер-клавиша (Пробел)
+-- 1. Лидер-клавиша (Пробел)
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
