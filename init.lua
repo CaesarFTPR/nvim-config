@@ -1,8 +1,12 @@
--- 1. Лидер-клавиша (Пробел)
+-- ============================================================================
+-- 1. Лидер-клавиши
+-- ============================================================================
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
--- 2. Автозагрузка lazy.nvim
+-- ============================================================================
+-- 2. Автозагрузка менеджера lazy.nvim
+-- ============================================================================
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
   vim.fn.system({
@@ -16,10 +20,12 @@ if not vim.loop.fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
--- 3. Подключение плагинов
+-- ============================================================================
+-- 3. Плагины
+-- ============================================================================
 require("lazy").setup({
   spec = {
-    -- Тема Catppuccin с прозрачностью под Ghostty
+    -- Тема Catppuccin Mocha с прозрачностью под Ghostty
     {
       "catppuccin/nvim",
       name = "catppuccin",
@@ -36,9 +42,9 @@ require("lazy").setup({
           },
         })
         vim.cmd.colorscheme("catppuccin-mocha")
-	
-	-- Повышенная яркость номеров строк
-	vim.api.nvim_set_hl(0, "LineNr", { fg = "#a6adc8" })
+
+        -- Повышенная контрастность неактивных номеров строк
+        vim.api.nvim_set_hl(0, "LineNr", { fg = "#a6adc8" })
       end,
     },
 
@@ -53,7 +59,7 @@ require("lazy").setup({
       },
     },
 
-    -- Подсветка синтаксиса Treesitter (Nvim 0.12+)
+    -- Подсветка синтаксиса Treesitter
     {
       "nvim-treesitter/nvim-treesitter",
       lazy = false,
@@ -104,7 +110,7 @@ require("lazy").setup({
       },
     },
 
-    -- Автодополнение кода (nvim-cmp)
+    -- Движок автодополнения (nvim-cmp)
     {
       "hrsh7th/nvim-cmp",
       event = "InsertEnter",
@@ -162,7 +168,9 @@ require("lazy").setup({
   },
 })
 
--- 4. Настройки интерфейса и навигации
+-- ============================================================================
+-- 4. Настройки редактора и навигации
+-- ============================================================================
 vim.opt.number = true
 vim.opt.relativenumber = true
 vim.opt.cursorline = true
@@ -171,40 +179,57 @@ vim.opt.termguicolors = true
 vim.opt.signcolumn = "yes"
 vim.opt.showmode = false
 
--- 5. Поддержка русской раскладки в режимах Normal и Visual
+-- Поддержка русской раскладки в режимах Normal и Visual
 vim.opt.langmap = "ФИСВУАПРШОЛДЬТЩЗЙКЫЕГМЦЧНЯ;ABCDEFGHIJKLMNOPQRSTUVWXYZ,фисвуапршолдьтщзйкыегмцчня;abcdefghijklmnopqrstuvwxyz"
 
--- 6. Функция форматирования с сохранением позиции курсора
+-- ============================================================================
+-- 5. Логика форматирования SQL
+-- ============================================================================
+-- Форматирование всего буфера с сохранением позиции курсора
 local function format_sql_buffer()
   local view = vim.fn.winsaveview()
   vim.cmd("silent! normal! gggqG")
   vim.fn.winrestview(view)
 end
 
--- 7. Настройки буферов SQL (форматирование, выполнение и автодополнение)
+-- Настройки буферов баз данных
 vim.api.nvim_create_autocmd("FileType", {
   pattern = { "sql", "mysql", "plsql", "pgsql" },
   callback = function(event)
-    vim.bo[event.buf].formatprg = "pg_format -"
+    -- Сброс встроенного выражения, чтобы оператор `gq` шел напрямую в `formatprg`
+    vim.bo[event.buf].formatexpr = ""
+
+    -- Принудительный перевод в нижний регистр ключевых слов (-u 1), функций (-f 1) и типов (-t 1)
+    vim.bo[event.buf].formatprg = "pg_format -u 1 -f 1 -t 1 -"
+
+    -- Автодополнение контекста схемы БД
     vim.bo[event.buf].omnifunc = "vim_dadbod_completion#omni"
 
-    -- Выполнить запрос под курсором по <leader>r (Пробел + r)
+    -- Выполнение текущего запроса под курсором по Space + r или Ctrl + Enter
     vim.keymap.set("n", "<leader>r", "vip<Plug>(DBUI_ExecuteQuery)", {
       buffer = event.buf,
       remap = true,
-      desc = "Выполнить текущий запрос",
+      desc = "DB: Выполнить текущий блок",
     })
-
-    -- Выполнить запрос под курсором по Ctrl + Enter
     vim.keymap.set("n", "<C-CR>", "vip<Plug>(DBUI_ExecuteQuery)", {
       buffer = event.buf,
       remap = true,
-      desc = "Выполнить текущий запрос",
+      desc = "DB: Выполнить текущий блок",
+    })
+
+    -- Выполнение только выделенного фрагмента в визуальном режиме
+    vim.keymap.set("v", "<leader>r", "<Plug>(DBUI_ExecuteQuery)", {
+      buffer = event.buf,
+      desc = "DB: Выполнить выделенный SQL",
+    })
+    vim.keymap.set("v", "<C-CR>", "<Plug>(DBUI_ExecuteQuery)", {
+      buffer = event.buf,
+      desc = "DB: Выполнить выделенный SQL",
     })
   end,
 })
 
--- Шорткаты ручного форматирования (<leader>f)
+-- Шорткаты ручного форматирования через Space + f
 vim.keymap.set("n", "<leader>f", format_sql_buffer, { desc = "Форматировать весь файл" })
 vim.keymap.set("v", "<leader>f", "gq", { desc = "Форматировать выделенный фрагмент" })
 
@@ -213,13 +238,3 @@ vim.api.nvim_create_autocmd("BufWritePre", {
   pattern = { "*.sql", "*.pgsql" },
   callback = format_sql_buffer,
 })
-
--- Выполнение SQL-запроса в Dadbod (в нормальном и визуальном режимах)
--- Вариант 1: Space + r
-vim.keymap.set({ "n", "v" }, "<leader>r", "<Plug>(DBUI_ExecuteQuery)", { desc = "DB: Execute Query" })
-
--- Вариант 2: Ctrl + Enter (работает одновременно с первым)
-vim.keymap.set({ "n", "v" }, "<C-CR>", "<Plug>(DBUI_ExecuteQuery)", { desc = "DB: Execute Query" })
-
--- Пример вызова команды или formatprg:
-vim.bo.formatprg = "pg_format -u 0 -f 0 -t 0 -"
