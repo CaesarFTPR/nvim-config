@@ -220,3 +220,6 @@ vim.keymap.set({ "n", "v" }, "<leader>r", "<Plug>(DBUI_ExecuteQuery)", { desc = 
 
 -- Вариант 2: Ctrl + Enter (работает одновременно с первым)
 vim.keymap.set({ "n", "v" }, "<C-CR>", "<Plug>(DBUI_ExecuteQuery)", { desc = "DB: Execute Query" })
+
+-- Пример вызова команды или formatprg:
+vim.bo.formatprg = "pg_format -u 0 -f 0 -t 0 -"
