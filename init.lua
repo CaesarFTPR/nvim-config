@@ -213,3 +213,10 @@ vim.api.nvim_create_autocmd("BufWritePre", {
   pattern = { "*.sql", "*.pgsql" },
   callback = format_sql_buffer,
 })
+
+-- Выполнение SQL-запроса в Dadbod (в нормальном и визуальном режимах)
+-- Вариант 1: Space + r
+vim.keymap.set({ "n", "v" }, "<leader>r", "<Plug>(DBUI_ExecuteQuery)", { desc = "DB: Execute Query" })
+
+-- Вариант 2: Ctrl + Enter (работает одновременно с первым)
+vim.keymap.set({ "n", "v" }, "<C-CR>", "<Plug>(DBUI_ExecuteQuery)", { desc = "DB: Execute Query" })
