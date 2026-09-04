@@ -183,25 +183,11 @@ vim.opt.showmode = false
 vim.opt.langmap = "ФИСВУАПРШОЛДЬТЩЗЙКЫЕГМЦЧНЯ;ABCDEFGHIJKLMNOPQRSTUVWXYZ,фисвуапршолдьтщзйкыегмцчня;abcdefghijklmnopqrstuvwxyz"
 
 -- ============================================================================
--- 5. Логика форматирования SQL
+-- 5. Буферы баз данных (Dadbod)
 -- ============================================================================
--- Форматирование всего буфера с сохранением позиции курсора
-local function format_sql_buffer()
-  local view = vim.fn.winsaveview()
-  vim.cmd("silent! normal! gggqG")
-  vim.fn.winrestview(view)
-end
-
--- Настройки буферов баз данных
 vim.api.nvim_create_autocmd("FileType", {
   pattern = { "sql", "mysql", "plsql", "pgsql" },
   callback = function(event)
-    -- Сброс встроенного выражения, чтобы оператор `gq` шел напрямую в `formatprg`
-    vim.bo[event.buf].formatexpr = ""
-
-    -- Принудительный перевод в нижний регистр ключевых слов (-u 1), функций (-f 1) и типов (-t 1)
-    vim.bo[event.buf].formatprg = "pg_format -u 1 -f 1 -t 1 -"
-
     -- Автодополнение контекста схемы БД
     vim.bo[event.buf].omnifunc = "vim_dadbod_completion#omni"
 
@@ -227,14 +213,4 @@ vim.api.nvim_create_autocmd("FileType", {
       desc = "DB: Выполнить выделенный SQL",
     })
   end,
-})
-
--- Шорткаты ручного форматирования через Space + f
-vim.keymap.set("n", "<leader>f", format_sql_buffer, { desc = "Форматировать весь файл" })
-vim.keymap.set("v", "<leader>f", "gq", { desc = "Форматировать выделенный фрагмент" })
-
--- Автоформатирование перед сохранением (:w)
-vim.api.nvim_create_autocmd("BufWritePre", {
-  pattern = { "*.sql", "*.pgsql" },
-  callback = format_sql_buffer,
 })
