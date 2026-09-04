@@ -1,4 +1,4 @@
--- 1. Лидер-клавиша (Пробел)
+-vim.cmd.colorschemvim.cmd.colorscheme- 1. Лидер-клавиша (Пробел)
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
@@ -36,6 +36,9 @@ require("lazy").setup({
           },
         })
         vim.cmd.colorscheme("catppuccin-mocha")
+	
+	-- Повышенная яркость номеров строк
+	vim.api.nvim_set_hl(0, "LineNr", { fg = "#a6adc8" })
       end,
     },
 
